@@ -1,589 +1,330 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-const multer = require('multer');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// 新的5级层级排行榜系统（匹配前端）
+// 5级层级排行榜评价等级配置
 const RATING_LEVELS = {
-    'sheng': { score: 5, name: '夯', description: 'S级 - 顶级表现', tier: 'S' },
-    'dengji': { score: 4, name: '顶级', description: 'A级 - 优秀水平', tier: 'A' },
-    'renshen': { score: 3, name: '人上人', description: 'B级 - 超越大多数', tier: 'B' },
-    'npc': { score: 2, name: 'NPC', description: 'C级 - 一般表现', tier: 'C' },
-    'lowest': { score: 1, name: '拉完了', description: 'D级 - 需要改进', tier: 'D' }
+    'hang': { score: 1, name: '夯', description: '基础表现', tier: 'S级', color: '#8B0000' },
+    'top': { score: 2, name: '顶级', description: '优秀水平', tier: 'A级', color: '#FF6B35' },
+    'ren': { score: 3, name: '人上人', description: '超越大多数', tier: 'B级', color: '#F7931E' },
+    'npc': { score: 4, name: 'NPC', description: '普通表现', tier: 'C级', color: '#FFD23F' },
+    'la': { score: 5, name: '拉完了', description: '需要改进', tier: 'D级', color: '#06FFA5' }
 };
 
-const LEVEL_ORDER = ['sheng', 'dengji', 'renshen', 'npc', 'lowest'];
-const VALID_RATINGS = Object.keys(RATING_LEVELS);
-
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
+// 中间件
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // 初始化数据库
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-    if (err) {
-        console.error('数据库连接失败:', err.message);
-    } else {
-        console.log('已连接到SQLite数据库');
-        initializeDatabase();
-    }
-});
+const dbPath = path.join(__dirname, 'data.db');
+const db = new sqlite3.Database(dbPath);
 
-function initializeDatabase() {
-    db.serialize(() => {
-        // 创建用户表
-        db.run(`CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
+// 创建数据库表
+function initDatabase() {
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            // 创建评价表
+            db.run(`CREATE TABLE IF NOT EXISTS ratings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content TEXT NOT NULL,
+                category TEXT NOT NULL,
+                rating TEXT NOT NULL,
+                description TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`);
 
-        // 创建评价表（更新为5级系统）
-        db.run(`CREATE TABLE IF NOT EXISTS ratings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            item_name TEXT NOT NULL,
-            item_category TEXT,
-            rating_level TEXT NOT NULL,
-            rating_score INTEGER NOT NULL,
-            rating_comment TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )`);
+            // 创建层级排行榜表
+            db.run(`CREATE TABLE IF NOT EXISTS tier_lists (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                tiers JSON NOT NULL,
+                items JSON,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`);
 
-        // 创建层级排行榜表
-        db.run(`CREATE TABLE IF NOT EXISTS tier_lists (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            description TEXT,
-            tiers_data TEXT NOT NULL, -- JSON格式存储层级数据
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )`);
+            // 创建待评价项目表
+            db.run(`CREATE TABLE IF NOT EXISTS pending_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                category TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )`);
 
-        // 创建示例用户
-        db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            if (row.count === 0) {
-                const hashedPassword = bcrypt.hashSync('demo123', 10);
-                db.run(`INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)`,
-                    ['demo', 'demo@example.com', hashedPassword]);
-                console.log('示例用户已创建');
-            }
-        });
+            // 插入示例数据（5级系统）
+            const sampleRatings = [
+                ['电影《流浪地球3》', '影视', 'top', '视觉效果震撼'],
+                ['周杰伦新专辑', '音乐', 'ren', '旋律依然动人'],
+                ['iPhone 20', '科技', 'hang', '创新不足'],
+                ['某个网红', '人物', 'la', '内容质量低'],
+                ['特斯拉FSD', '科技', 'npc', '还需完善']
+            ];
 
-        // 创建示例层级排行榜
-        db.get("SELECT COUNT(*) as count FROM tier_lists", (err, row) => {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            if (row.count === 0) {
-                const exampleTierData = {
-                    tiers: {
-                        'sheng': { name: '夯 (S级)', color: '#ff6b6b', items: ['示例项目1', '示例项目2'] },
-                        'dengji': { name: '顶级 (A级)', color: '#4ecdc4', items: ['示例项目3'] },
-                        'renshen': { name: '人上人 (B级)', color: '#45b7d1', items: [] },
-                        'npc': { name: 'NPC (C级)', color: '#96ceb4', items: [] },
-                        'lowest': { name: '拉完了 (D级)', color: '#ffd93d', items: [] }
-                    }
-                };
+            const pendingItems = [
+                ['新上映的电影', '需要评价的影视作品', '影视'],
+                ['新发布的歌曲', '待评价的音乐作品', '音乐'],
+                ['新产品发布', '科技产品评价', '科技'],
+                ['新的人物', '人物评价', '人物'],
+                ['新的事件', '事件评价', '事件']
+            ];
+
+            // 检查是否已有数据
+            db.get('SELECT COUNT(*) as count FROM ratings', (err, row) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
                 
-                db.run(`INSERT INTO tier_lists (name, description, tiers_data) VALUES (?, ?, ?)`,
-                    ['示例层级排行榜', '展示5级层级排行榜系统', JSON.stringify(exampleTierData)]);
-                console.log('示例层级排行榜已创建');
-            }
+                if (row.count === 0) {
+                    const stmt = db.prepare('INSERT INTO ratings (content, category, rating, description) VALUES (?, ?, ?, ?)');
+                    sampleRatings.forEach(item => {
+                        stmt.run(item);
+                    });
+                    stmt.finalize();
+
+                    const pendingStmt = db.prepare('INSERT INTO pending_items (title, description, category) VALUES (?, ?, ?)');
+                    pendingItems.forEach(item => {
+                        pendingStmt.run(item);
+                    });
+                    pendingStmt.finalize();
+                }
+            });
+
+            resolve();
         });
     });
 }
 
-// 验证评级等级
-function validateRatingLevel(level) {
-    return VALID_RATINGS.includes(level);
-}
-
-// 转换等级为分数
-function getRatingScore(level) {
-    return RATING_LEVELS[level] ? RATING_LEVELS[level].score : 0;
-}
-
-// 获取等级信息
-function getRatingInfo(level) {
-    return RATING_LEVELS[level] || null;
-}
-
-// 认证中间件
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (token == null) return res.sendStatus(401);
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-    });
-}
-
-// API路由
-
-// 获取所有评价等级（5级系统）
-app.get('/api/rating-levels', (req, res) => {
-    const levels = LEVEL_ORDER.map(level => ({
-        level: level,
-        ...RATING_LEVELS[level]
-    }));
-    res.json({ success: true, data: levels });
-});
-
-// 用户注册
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        
-        if (!username || !email || !password) {
-            return res.status(400).json({ success: false, message: '所有字段都是必填的' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        db.run(
-            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-            [username, email, hashedPassword],
-            function(err) {
-                if (err) {
-                    if (err.message.includes('UNIQUE constraint failed')) {
-                        return res.status(409).json({ success: false, message: '用户名或邮箱已存在' });
-                    }
-                    return res.status(500).json({ success: false, message: '注册失败' });
-                }
-                
-                const token = jwt.sign(
-                    { id: this.lastID, username },
-                    JWT_SECRET,
-                    { expiresIn: '24h' }
-                );
-                
-                res.status(201).json({
-                    success: true,
-                    message: '注册成功',
-                    token,
-                    user: { id: this.lastID, username, email }
-                });
-            }
-        );
-    } catch (error) {
-        res.status(500).json({ success: false, message: '服务器错误' });
-    }
-});
-
-// 用户登录
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    
-    db.get(
-        'SELECT * FROM users WHERE username = ? OR email = ?',
-        [username, username],
-        async (err, user) => {
-            if (err) {
-                return res.status(500).json({ success: false, message: '服务器错误' });
-            }
-            
-            if (!user) {
-                return res.status(401).json({ success: false, message: '用户不存在' });
-            }
-            
-            const passwordMatch = await bcrypt.compare(password, user.password_hash);
-            
-            if (!passwordMatch) {
-                return res.status(401).json({ success: false, message: '密码错误' });
-            }
-            
-            const token = jwt.sign(
-                { id: user.id, username: user.username },
-                JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-            
-            res.json({
-                success: true,
-                message: '登录成功',
-                token,
-                user: { id: user.id, username: user.username, email: user.email }
-            });
-        }
-    );
-});
-
-// 创建评价
-app.post('/api/ratings', authenticateToken, (req, res) => {
-    try {
-        const { item_name, item_category, rating_level, rating_comment } = req.body;
-        
-        // 验证等级
-        if (!validateRatingLevel(rating_level)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: '无效的评价等级',
-                valid_levels: VALID_RATINGS
-            });
-        }
-        
-        const rating_score = getRatingScore(rating_level);
-        const rating_info = getRatingInfo(rating_level);
-        
-        db.run(
-            'INSERT INTO ratings (user_id, item_name, item_category, rating_level, rating_score, rating_comment) VALUES (?, ?, ?, ?, ?, ?)',
-            [req.user.id, item_name, item_category || '', rating_level, rating_score, rating_comment || ''],
-            function(err) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ success: false, message: '创建评价失败' });
-                }
-                
-                res.status(201).json({
-                    success: true,
-                    message: '评价创建成功',
-                    data: {
-                        id: this.lastID,
-                        item_name,
-                        item_category: item_category || '',
-                        rating_level,
-                        rating_score,
-                        rating_info,
-                        rating_comment: rating_comment || ''
-                    }
-                });
-            }
-        );
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: '服务器错误' });
-    }
-});
-
-// 获取用户的所有评价
-app.get('/api/ratings', authenticateToken, (req, res) => {
-    db.all(
-        'SELECT * FROM ratings WHERE user_id = ? ORDER BY created_at DESC',
-        [req.user.id],
-        (err, rows) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: '获取评价失败' });
-            }
-            
-            const ratings = rows.map(row => ({
-                ...row,
-                rating_info: getRatingInfo(row.rating_level)
-            }));
-            
-            res.json({ success: true, data: ratings });
-        }
-    );
-});
-
-// 获取评价统计
-app.get('/api/statistics', (req, res) => {
-    const { category } = req.query;
-    
-    let query = 'SELECT rating_level, COUNT(*) as count FROM ratings';
-    let params = [];
-    
-    if (category) {
-        query += ' WHERE item_category = ?';
-        params.push(category);
-    }
-    
-    query += ' GROUP BY rating_level';
-    
-    db.all(query, params, (err, rows) => {
+// 获取所有评价
+app.get('/api/ratings', (req, res) => {
+    db.all('SELECT * FROM ratings ORDER BY created_at DESC', (err, rows) => {
         if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: '获取统计数据失败' });
+            res.status(500).json({ error: err.message });
+            return;
         }
         
-        const stats = {};
-        const total = rows.reduce((sum, row) => sum + row.count, 0);
-        
-        rows.forEach(row => {
-            stats[row.rating_level] = {
-                count: row.count,
-                percentage: total > 0 ? (row.count / total * 100).toFixed(1) : 0,
-                rating_info: getRatingInfo(row.rating_level)
+        // 转换数据格式，添加等级信息
+        const ratingsWithLevels = rows.map(row => {
+            const level = RATING_LEVELS[row.rating];
+            return {
+                ...row,
+                level: level ? {
+                    name: level.name,
+                    score: level.score,
+                    description: level.description,
+                    tier: level.tier,
+                    color: level.color
+                } : null
             };
         });
         
-        res.json({
-            success: true,
-            data: {
-                total_ratings: total,
-                by_level: stats
+        res.json(ratingsWithLevels);
+    });
+});
+
+// 创建新评价
+app.post('/api/ratings', (req, res) => {
+    const { content, category, rating, description } = req.body;
+    
+    if (!content || !category || !rating) {
+        return res.status(400).json({ error: '缺少必要字段' });
+    }
+    
+    // 验证评价等级
+    if (!RATING_LEVELS[rating]) {
+        return res.status(400).json({ error: '无效的评价等级' });
+    }
+    
+    db.run(
+        'INSERT INTO ratings (content, category, rating, description) VALUES (?, ?, ?, ?)',
+        [content, category, rating, description || ''],
+        function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
             }
-        });
+            res.json({ id: this.lastID, message: '评价创建成功' });
+        }
+    );
+});
+
+// 获取待评价项目
+app.get('/api/pending-items', (req, res) => {
+    db.all('SELECT * FROM pending_items ORDER BY created_at DESC', (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json(rows);
+    });
+});
+
+// 创建待评价项目
+app.post('/api/pending-items', (req, res) => {
+    const { title, description, category } = req.body;
+    
+    if (!title || !category) {
+        return res.status(400).json({ error: '缺少必要字段' });
+    }
+    
+    db.run(
+        'INSERT INTO pending_items (title, description, category) VALUES (?, ?, ?)',
+        [title, description || '', category],
+        function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ id: this.lastID, message: '待评价项目创建成功' });
+        }
+    );
+});
+
+// 删除待评价项目
+app.delete('/api/pending-items/:id', (req, res) => {
+    db.run('DELETE FROM pending_items WHERE id = ?', [req.params.id], function(err) {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({ message: '项目删除成功' });
     });
 });
 
 // 获取层级排行榜列表
 app.get('/api/tier-lists', (req, res) => {
-    db.all(
-        'SELECT id, name, description, created_at, updated_at FROM tier_lists ORDER BY updated_at DESC',
-        (err, rows) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: '获取层级排行榜失败' });
-            }
-            
-            res.json({ success: true, data: rows });
+    db.all('SELECT * FROM tier_lists ORDER BY created_at DESC', (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
         }
-    );
+        
+        // 解析JSON字段
+        const tierLists = rows.map(row => ({
+            ...row,
+            tiers: JSON.parse(row.tiers || '[]'),
+            items: JSON.parse(row.items || '[]')
+        }));
+        
+        res.json(tierLists);
+    });
 });
 
-// 创建或更新层级排行榜
-app.post('/api/tier-lists', authenticateToken, (req, res) => {
-    try {
-        const { name, description, tiers_data } = req.body;
-        
-        if (!name || !tiers_data) {
-            return res.status(400).json({ success: false, message: '名称和层级数据是必填的' });
-        }
-        
-        // 验证层级数据
-        const tiers = typeof tiers_data === 'string' ? JSON.parse(tiers_data) : tiers_data;
-        
-        if (!tiers.tiers) {
-            return res.status(400).json({ success: false, message: '层级数据格式不正确' });
-        }
-        
-        // 验证所有等级都在有效范围内
-        const invalidLevels = Object.keys(tiers.tiers).filter(level => !validateRatingLevel(level));
-        if (invalidLevels.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: '包含无效的评价等级',
-                invalid_levels: invalidLevels
-            });
-        }
-        
-        const tiersJson = JSON.stringify(tiers);
-        
-        db.run(
-            'INSERT INTO tier_lists (name, description, tiers_data) VALUES (?, ?, ?)',
-            [name, description || '', tiersJson],
-            function(err) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ success: false, message: '创建层级排行榜失败' });
-                }
-                
-                res.status(201).json({
-                    success: true,
-                    message: '层级排行榜创建成功',
-                    data: {
-                        id: this.lastID,
-                        name,
-                        description: description || '',
-                        tiers_data: tiers
-                    }
-                });
-            }
-        );
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: '服务器错误' });
+// 创建新的层级排行榜
+app.post('/api/tier-lists', (req, res) => {
+    const { name, description, tiers, items } = req.body;
+    
+    if (!name || !tiers) {
+        return res.status(400).json({ error: '缺少必要字段' });
     }
+    
+    db.run(
+        'INSERT INTO tier_lists (name, description, tiers, items) VALUES (?, ?, ?, ?)',
+        [name, description || '', JSON.stringify(tiers), JSON.stringify(items || [])],
+        function(err) {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            res.json({ id: this.lastID, message: '层级排行榜创建成功' });
+        }
+    );
 });
 
 // 获取特定层级排行榜
 app.get('/api/tier-lists/:id', (req, res) => {
-    const { id } = req.params;
-    
-    db.get(
-        'SELECT * FROM tier_lists WHERE id = ?',
-        [id],
-        (err, row) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: '获取层级排行榜失败' });
-            }
-            
-            if (!row) {
-                return res.status(404).json({ success: false, message: '层级排行榜不存在' });
-            }
-            
-            try {
-                const tiersData = JSON.parse(row.tiers_data);
-                res.json({
-                    success: true,
-                    data: {
-                        ...row,
-                        tiers_data: tiersData
-                    }
-                });
-            } catch (parseErr) {
-                console.error('JSON解析错误:', parseErr);
-                res.status(500).json({ success: false, message: '层级数据解析失败' });
-            }
-        }
-    );
-});
-
-// 更新层级排行榜
-app.put('/api/tier-lists/:id', authenticateToken, (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, description, tiers_data } = req.body;
-        
-        if (!name || !tiers_data) {
-            return res.status(400).json({ success: false, message: '名称和层级数据是必填的' });
+    db.get('SELECT * FROM tier_lists WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
         }
         
-        // 验证层级数据
-        const tiers = typeof tiers_data === 'string' ? JSON.parse(tiers_data) : tiers_data;
-        
-        if (!tiers.tiers) {
-            return res.status(400).json({ success: false, message: '层级数据格式不正确' });
+        if (!row) {
+            return res.status(404).json({ error: '层级排行榜不存在' });
         }
         
-        // 验证所有等级都在有效范围内
-        const invalidLevels = Object.keys(tiers.tiers).filter(level => !validateRatingLevel(level));
-        if (invalidLevels.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: '包含无效的评价等级',
-                invalid_levels: invalidLevels
-            });
-        }
+        // 解析JSON字段
+        const tierList = {
+            ...row,
+            tiers: JSON.parse(row.tiers || '[]'),
+            items: JSON.parse(row.items || '[]')
+        };
         
-        const tiersJson = JSON.stringify(tiers);
-        
-        db.run(
-            'UPDATE tier_lists SET name = ?, description = ?, tiers_data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-            [name, description || '', tiersJson, id],
-            function(err) {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ success: false, message: '更新层级排行榜失败' });
-                }
-                
-                if (this.changes === 0) {
-                    return res.status(404).json({ success: false, message: '层级排行榜不存在' });
-                }
-                
-                res.json({
-                    success: true,
-                    message: '层级排行榜更新成功',
-                    data: {
-                        id: parseInt(id),
-                        name,
-                        description: description || '',
-                        tiers_data: tiers
-                    }
-                });
-            }
-        );
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: '服务器错误' });
-    }
-});
-
-// 删除层级排行榜
-app.delete('/api/tier-lists/:id', authenticateToken, (req, res) => {
-    const { id } = req.params;
-    
-    db.run(
-        'DELETE FROM tier_lists WHERE id = ?',
-        [id],
-        function(err) {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: '删除层级排行榜失败' });
-            }
-            
-            if (this.changes === 0) {
-                return res.status(404).json({ success: false, message: '层级排行榜不存在' });
-            }
-            
-            res.json({ success: true, message: '层级排行榜删除成功' });
-        }
-    );
-});
-
-// 获取分类列表
-app.get('/api/categories', (req, res) => {
-    db.all(
-        'SELECT DISTINCT item_category FROM ratings WHERE item_category IS NOT NULL AND item_category != "" ORDER BY item_category',
-        (err, rows) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ success: false, message: '获取分类失败' });
-            }
-            
-            const categories = rows.map(row => row.item_category);
-            res.json({ success: true, data: categories });
-        }
-    );
-});
-
-// 静态文件服务
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// 健康检查端点
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        success: true, 
-        message: '服务器运行正常',
-        version: '2.0',
-        rating_system: '5级层级排行榜',
-        valid_levels: VALID_RATINGS
+        res.json(tierList);
     });
 });
 
-// 404处理
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: '接口不存在' });
+// 获取评价等级信息
+app.get('/api/rating-levels', (req, res) => {
+    const levelsArray = Object.entries(RATING_LEVELS).map(([key, value]) => ({
+        key,
+        ...value
+    }));
+    
+    res.json(levelsArray);
 });
 
-// 错误处理中间件
-app.use((err, req, res, next) => {
-    console.error('服务器错误:', err);
-    res.status(500).json({ success: false, message: '服务器内部错误' });
+// 获取统计数据
+app.get('/api/stats', (req, res) => {
+    // 统计数据
+    db.get('SELECT COUNT(*) as total FROM ratings', (err, totalRow) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        
+        // 按等级统计
+        const ratingStats = {};
+        Object.keys(RATING_LEVELS).forEach(level => {
+            ratingStats[level] = { count: 0, name: RATING_LEVELS[level].name, tier: RATING_LEVELS[level].tier };
+        });
+        
+        db.all('SELECT rating, COUNT(*) as count FROM ratings GROUP BY rating', (err, rows) => {
+            if (err) {
+                res.status(500).json({ error: err.message });
+                return;
+            }
+            
+            rows.forEach(row => {
+                if (ratingStats[row.rating]) {
+                    ratingStats[row.rating].count = row.count;
+                }
+            });
+            
+            // 按类别统计
+            db.all('SELECT category, COUNT(*) as count FROM ratings GROUP BY category', (err, categoryRows) => {
+                if (err) {
+                    res.status(500).json({ error: err.message });
+                    return;
+                }
+                
+                res.json({
+                    totalRatings: totalRow.total,
+                    ratingDistribution: ratingStats,
+                    categoryDistribution: categoryRows
+                });
+            });
+        });
+    });
 });
 
 // 启动服务器
-app.listen(PORT, () => {
-    console.log(`服务器运行在 http://localhost:${PORT}`);
-    console.log('评价系统：5级层级排行榜');
-    console.log('可用等级：', VALID_RATINGS.join(', '));
-});
+async function startServer() {
+    try {
+        await initDatabase();
+        app.listen(PORT, () => {
+            console.log(`🚀 5级层级排行榜服务器运行在 http://localhost:${PORT}`);
+            console.log('📊 等级系统：夯(S级) → 顶级(A级) → 人上人(B级) → NPC(C级) → 拉完了(D级)');
+        });
+    } catch (err) {
+        console.error('❌ 服务器启动失败:', err);
+        process.exit(1);
+    }
+}
 
-// 优雅关闭
-process.on('SIGINT', () => {
-    console.log('正在关闭服务器...');
-    db.close((err) => {
-        if (err) {
-            console.error('关闭数据库连接失败:', err.message);
-        } else {
-            console.log('数据库连接已关闭');
-        }
-        process.exit(0);
-    });
-});
+startServer();

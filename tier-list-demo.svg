@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glassEffect">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feFlood flood-color="rgba(255,255,255,0.3)"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 主背景 -->
+  <rect width="1400" height="900" fill="url(#bgGradient)"/>
+
+  <!-- 顶部标题 -->
+  <text x="700" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white">层级排行榜 - Tier List Demo</text>
+  
+  <!-- S级排行 -->
+  <rect x="50" y="120" width="300" height="180" rx="15" fill="#FFD700" stroke="#FFA000" stroke-width="3" filter="url(#glassEffect)"/>
+  <text x="200" y="150" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="#333">S级 - 神作</text>
+  
+  <!-- 项目1 -->
+  <rect x="70" y="170" width="80" height="60" rx="8" fill="#FFF9C4" stroke="#FBC02D"/>
+  <text x="110" y="195" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#333">《原神》</text>
+  <text x="110" y="208" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">游戏</text>
+  <text x="110" y="220" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">9.2/10</text>
+  
+  <!-- 项目2 -->
+  <rect x="170" y="170" width="80" height="60" rx="8" fill="#FFF9C4" stroke="#FBC02D"/>
+  <text x="210" y="195" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#333">《塞尔达》</text>
+  <text x="210" y="208" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">游戏</text>
+  <text x="210" y="220" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">9.5/10</text>
+  
+  <!-- 项目3 -->
+  <rect x="270" y="170" width="80" height="60" rx="8" fill="#FFF9C4" stroke="#FBC02D"/>
+  <text x="310" y="195" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#333">《星际2》</text>
+  <text x="310" y="208" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">游戏</text>
+  <text x="310" y="220" text-anchor="middle" font-family="Arial" font-size="8" fill="#666">9.0/10</text>
+  
+  <!-- A级排行 -->
+  <rect x="50" y="320" width="300" height="160" rx="15" fill="#FF9800" stroke="#F57C00" stroke-width="3" filter="url(#glassEffect)"/>
+  <text x="200" y="350" text-anchor="middle" font-family="Arial" font-size="22" font-weight="bold" fill="white">A级 - 佳作</text>
+  
+  <!-- A级项目 -->
+  <rect x="70" y="370" width="70" height="50" rx="8" fill="#FFE0B2" stroke="#FF9800"/>
+  <text x="105" y="390" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《守望先锋》</text>
+  <text x="105" y="405" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">8.5/10</text>
+  
+  <rect x="150" y="370" width="70" height="50" rx="8" fill="#FFE0B2" stroke="#FF9800"/>
+  <text x="185" y="390" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《GTA5》</text>
+  <text x="185" y="405" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">8.8/10</text>
+  
+  <rect x="230" y="370" width="70" height="50" rx="8" fill="#FFE0B2" stroke="#FF9800"/>
+  <text x="265" y="390" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《巫师3》</text>
+  <text x="265" y="405" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">8.7/10</text>
+
+  <!-- B级排行 -->
+  <rect x="50" y="500" width="300" height="140" rx="15" fill="#2196F3" stroke="#1976D2" stroke-width="3" filter="url(#glassEffect)"/>
+  <text x="200" y="530" text-anchor="middle" font-family="Arial" font-size="20" font-weight="bold" fill="white">B级 - 可玩</text>
+  
+  <!-- B级项目 -->
+  <rect x="70" y="550" width="60" height="45" rx="8" fill="#BBDEFB" stroke="#2196F3"/>
+  <text x="100" y="568" text-anchor="middle" font-family="Arial" font-size="8" font-weight="bold" fill="#333">《赛博朋克》</text>
+  <text x="100" y="582" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">7.5/10</text>
+  
+  <rect x="140" y="550" width="60" height="45" rx="8" fill="#BBDEFB" stroke="#2196F3"/>
+  <text x="170" y="568" text-anchor="middle" font-family="Arial" font-size="8" font-weight="bold" fill="#333">《无人深空》</text>
+  <text x="170" y="582" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">7.0/10</text>
+  
+  <rect x="210" y="550" width="60" height="45" rx="8" fill="#BBDEFB" stroke="#2196F3"/>
+  <text x="240" y="568" text-anchor="middle" font-family="Arial" font-size="8" font-weight="bold" fill="#333">《战地5》</text>
+  <text x="240" y="582" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">7.8/10</text>
+  
+  <rect x="280" y="550" width="60" height="45" rx="8" fill="#BBDEFB" stroke="#2196F3"/>
+  <text x="310" y="568" text-anchor="middle" font-family="Arial" font-size="8" font-weight="bold" fill="#333">《圣歌》</text>
+  <text x="310" y="582" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">6.5/10</text>
+
+  <!-- C级排行 -->
+  <rect x="50" y="660" width="300" height="120" rx="15" fill="#4CAF50" stroke="#388E3C" stroke-width="3" filter="url(#glassEffect)"/>
+  <text x="200" y="690" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">C级 - 一般</text>
+  
+  <!-- C级项目 -->
+  <rect x="70" y="710" width="55" height="40" rx="8" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="97" y="725" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#333">《死亡搁浅》</text>
+  <text x="97" y="738" text-anchor="middle" font-family="Arial" font-size="6" fill="#666">6.8/10</text>
+  
+  <rect x="135" y="710" width="55" height="40" rx="8" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="162" y="725" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#333">《最后生还者2》</text>
+  <text x="162" y="738" text-anchor="middle" font-family="Arial" font-size="6" fill="#666">6.2/10</text>
+  
+  <rect x="200" y="710" width="55" height="40" rx="8" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="227" y="725" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#333">《辐射76》</text>
+  <text x="227" y="738" text-anchor="middle" font-family="Arial" font-size="6" fill="#666">5.5/10</text>
+  
+  <rect x="265" y="710" width="55" height="40" rx="8" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="292" y="725" text-anchor="middle" font-family="Arial" font-size="7" font-weight="bold" fill="#333">《魔兽争霸3》</text>
+  <text x="292" y="738" text-anchor="middle" font-family="Arial" font-size="6" fill="#666">5.8/10</text>
+
+  <!-- D级排行 -->
+  <rect x="400" y="120" width="300" height="180" rx="15" fill="#9C27B0" stroke="#7B1FA2" stroke-width="3" filter="url(#glassEffect)"/>
+  <text x="550" y="150" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="white">D级 - 差</text>
+  
+  <!-- D级项目 -->
+  <rect x="420" y="170" width="70" height="50" rx="8" fill="#E1BEE7" stroke="#9C27B0"/>
+  <text x="455" y="188" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《暗黑破坏神4》</text>
+  <text x="455" y="202" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">5.0/10</text>
+  
+  <rect x="500" y="170" width="70" height="50" rx="8" fill="#E1BEE7" stroke="#9C27B0"/>
+  <text x="535" y="188" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《FIFA 23》</text>
+  <text x="535" y="202" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">4.8/10</text>
+  
+  <rect x="580" y="170" width="70" height="50" rx="8" fill="#E1BEE7" stroke="#9C27B0"/>
+  <text x="615" y="188" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#333">《NBA 2K23》</text>
+  <text x="615" y="202" text-anchor="middle" font-family="Arial" font-size="7" fill="#666">4.5/10</text>
+
+  <!-- 右侧信息面板 -->
+  <rect x="750" y="120" width="600" height="660" rx="15" fill="rgba(255,255,255,0.9)" filter="url(#glassEffect)"/>
+  
+  <text x="780" y="150" font-family="Arial" font-size="20" font-weight="bold" fill="#333">层级排行榜说明</text>
+  
+  <!-- 评价体系说明 -->
+  <text x="780" y="180" font-family="Arial" font-size="14" font-weight="bold" fill="#666">评价体系：</text>
+  <text x="780" y="200" font-family="Arial" font-size="12" fill="#666">• S级 (9.0-10.0): 神作级别，现象级作品</text>
+  <text x="780" y="220" font-family="Arial" font-size="12" fill="#666">• A级 (8.0-8.9): 佳作，质量上乘</text>
+  <text x="780" y="240" font-family="Arial" font-size="12" fill="#666">• B级 (7.0-7.9): 可玩，值得体验</text>
+  <text x="780" y="260" font-family="Arial" font-size="12" fill="#666">• C级 (6.0-6.9): 一般，存在一些问题</text>
+  <text x="780" y="280" font-family="Arial" font-size="12" fill="#666">• D级 (5.0-5.9): 差，不太推荐</text>
+  
+  <!-- 拖拽功能说明 -->
+  <text x="780" y="320" font-family="Arial" font-size="14" font-weight="bold" fill="#666">操作方式：</text>
+  <text x="780" y="340" font-family="Arial" font-size="12" fill="#666">• 拖拽项目到不同等级区域</text>
+  <text x="780" y="360" font-family="Arial" font-size="12" fill="#666">• 支持多维度评价（技术、创意、影响力等）</text>
+  <text x="780" y="380" font-family="Arial" font-size="12" fill="#666">• 实时统计各等级分布</text>
+  <text x="780" y="400" font-family="Arial" font-size="12" fill="#666">• 导出排行榜结果</text>
+  
+  <!-- 评价统计 -->
+  <rect x="780" y="430" width="540" height="200" rx="10" fill="#F5F5F5" stroke="#E0E0E0"/>
+  <text x="800" y="460" font-family="Arial" font-size="16" font-weight="bold" fill="#333">当前排行榜统计</text>
+  
+  <!-- 统计图表 -->
+  <text x="800" y="490" font-family="Arial" font-size="12" fill="#666">S级 (神作): 3个项目</text>
+  <rect x="800" y="495" width="120" height="8" fill="#FFD700"/>
+  
+  <text x="800" y="520" font-family="Arial" font-size="12" fill="#666">A级 (佳作): 3个项目</text>
+  <rect x="800" y="525" width="100" height="8" fill="#FF9800"/>
+  
+  <text x="800" y="550" font-family="Arial" font-size="12" fill="#666">B级 (可玩): 4个项目</text>
+  <rect x="800" y="555" width="90" height="8" fill="#2196F3"/>
+  
+  <text x="800" y="580" font-family="Arial" font-size="12" fill="#666">C级 (一般): 4个项目</text>
+  <rect x="800" y="585" width="70" height="8" fill="#4CAF50"/>
+  
+  <text x="950" y="490" font-family="Arial" font-size="12" fill="#666">D级 (差): 3个项目</text>
+  <rect x="950" y="495" width="60" height="8" fill="#9C27B0"/>
+  
+  <!-- 平均分 -->
+  <text x="950" y="520" font-family="Arial" font-size="14" font-weight="bold" fill="#333">平均分数: 7.4/10</text>
+  <text x="950" y="540" font-family="Arial" font-size="12" fill="#666">总计项目: 17个</text>
+  <text x="950" y="560" font-family="Arial" font-size="12" fill="#666">最新更新: 2024-01-15</text>
+  
+  <!-- 功能按钮 -->
+  <rect x="780" y="650" width="120" height="35" rx="17" fill="#4CAF50"/>
+  <text x="840" y="673" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">重新排序</text>
+  
+  <rect x="920" y="650" width="120" height="35" rx="17" fill="#2196F3"/>
+  <text x="980" y="673" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">导出图片</text>
+  
+  <rect x="1060" y="650" width="120" height="35" rx="17" fill="#FF9800"/>
+  <text x="1120" y="673" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">保存配置</text>
+  
+  <rect x="1200" y="650" width="120" height="35" rx="17" fill="#9C27B0"/>
+  <text x="1260" y="673" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">分享链接</text>
+
+  <!-- 底部版权 -->
+  <text x="700" y="850" text-anchor="middle" font-family="Arial" font-size="12" fill="rgba(255,255,255,0.8)">
+    © 2024 层级排行榜工具 - 专业的多维度评价平台
+  </text>
+</svg>

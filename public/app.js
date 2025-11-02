@@ -179,14 +179,14 @@ function handleDropToUnranked(e) {
     }
 }
 
-// 获取层级中文名称
+// 获取层级中文名称 - 已修正匹配后端系统
 function getTierName(tierKey) {
     const tierNames = {
-        's': '夯',
-        'a': '顶级',
-        'b': '人上人',
-        'c': 'NPC',
-        'd': '拉完了'
+        'hang': '夯',
+        'top': '顶级', 
+        'ren': '人上人',
+        'npc': 'NPC',
+        'la': '拉完了'
     };
     return tierNames[tierKey] || tierKey;
 }

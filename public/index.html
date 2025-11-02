@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>从夯到拉 - 多领域评价平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- 登录/注册模态框 -->
+        <div id="authModal" class="modal">
+            <div class="modal-content">
+                <div class="tabs">
+                    <button class="tab active" data-tab="login">登录</button>
+                    <button class="tab" data-tab="register">注册</button>
+                </div>
+                
+                <!-- 登录表单 -->
+                <div id="loginForm" class="form-container active">
+                    <h2>登录</h2>
+                    <form id="login">
+                        <input type="text" id="loginUsername" placeholder="用户名或邮箱" required>
+                        <input type="password" id="loginPassword" placeholder="密码" required>
+                        <button type="submit">登录</button>
+                    </form>
+                    <div id="loginError" class="error-message"></div>
+                </div>
+                
+                <!-- 注册表单 -->
+                <div id="registerForm" class="form-container">
+                    <h2>注册</h2>
+                    <form id="register">
+                        <input type="text" id="registerUsername" placeholder="用户名" required>
+                        <input type="email" id="registerEmail" placeholder="邮箱" required>
+                        <input type="password" id="registerPassword" placeholder="密码" required>
+                        <button type="submit">注册</button>
+                    </form>
+                    <div id="registerError" class="error-message"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 头部导航 -->
+        <header class="header">
+            <div class="container">
+                <h1><i class="fas fa-star"></i> 从夯到拉</h1>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span id="username"></span>
+                    <button onclick="logout()">退出</button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 统计面板 -->
+        <div class="stats-panel" id="statsPanel">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">用户数</div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="stat-number" id="totalContents">0</div>
+                        <div class="stat-label">内容数</div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-star"></i>
+                        <div class="stat-number" id="totalRatings">0</div>
+                        <div class="stat-label">评价数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分类标签 -->
+        <div class="category-tabs">
+            <div class="container">
+                <button class="category-tab active" data-category="all">全部</button>
+                <button class="category-tab" data-category="game">游戏</button>
+                <button class="category-tab" data-category="movie">影视</button>
+                <button class="category-tab" data-category="music">音乐</button>
+                <button class="category-tab" data-category="book">文学</button>
+                <button class="category-tab" data-category="food">美食</button>
+                <button class="category-tab" data-category="tech">科技</button>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <div class="container">
+                <!-- 内容列表 -->
+                <div class="content-list" id="contentList">
+                    <!-- 内容卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 评价模态框 -->
+                <div id="ratingModal" class="modal">
+                    <div class="modal-content large">
+                        <div class="modal-header">
+                            <h2 id="modalTitle">评价内容</h2>
+                            <button class="close-btn" onclick="closeRatingModal()">&times;</button>
+                        </div>
+                        
+                        <form id="ratingForm">
+                            <div class="rating-categories">
+                                <div class="rating-category">
+                                    <label>总体评价 *</label>
+                                    <div class="rating-levels" id="overallLevels">
+                                        <!-- 动态生成等级按钮 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-category">
+                                    <label>技术层面</label>
+                                    <div class="rating-levels" id="technicalLevels">
+                                        <!-- 动态生成等级按钮 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-category">
+                                    <label>创意层面</label>
+                                    <div class="rating-levels" id="creativityLevels">
+                                        <!-- 动态生成等级按钮 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-category">
+                                    <label>执行层面</label>
+                                    <div class="rating-levels" id="executionLevels">
+                                        <!-- 动态生成等级按钮 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="rating-category">
+                                    <label>影响力</label>
+                                    <div class="rating-levels" id="impactLevels">
+                                        <!-- 动态生成等级按钮 -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>详细评价</label>
+                                <textarea id="ratingComment" placeholder="分享你的详细想法..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>标签</label>
+                                <div class="tags-input">
+                                    <input type="text" id="tagInput" placeholder="输入标签后按回车添加">
+                                    <div id="tagsContainer" class="tags-container">
+                                        <!-- 动态生成的标签 -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="submit-btn">提交评价</button>
+                        </form>
+                        
+                        <div id="existingRatings" class="existing-ratings">
+                            <!-- 现有评价 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 创建内容模态框 -->
+                <div id="createModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>添加新内容</h2>
+                            <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+                        </div>
+                        
+                        <form id="createContentForm">
+                            <div class="form-group">
+                                <label>标题 *</label>
+                                <input type="text" id="contentTitle" placeholder="内容标题" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>分类 *</label>
+                                <select id="contentCategory" required>
+                                    <option value="">选择分类</option>
+                                    <option value="game">游戏</option>
+                                    <option value="movie">影视</option>
+                                    <option value="music">音乐</option>
+                                    <option value="book">文学</option>
+                                    <option value="food">美食</option>
+                                    <option value="tech">科技</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>描述</label>
+                                <textarea id="contentDescription" placeholder="内容描述..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>图片URL</label>
+                                <input type="url" id="contentImage" placeholder="图片链接（可选）">
+                            </div>
+                            
+                            <button type="submit" class="submit-btn">创建内容</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 浮动操作按钮 -->
+        <div class="fab-container">
+            <button class="fab" onclick="openCreateModal()" title="添加内容">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        
+        <!-- 加载指示器 -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        
+        <!-- 消息提示 -->
+        <div id="toast" class="toast"></div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

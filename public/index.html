@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>从夯到拉 - 多领域评价平台</title>
+    <title>从夯到拉 - 层级排行榜平台</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -45,175 +45,104 @@
         <!-- 头部导航 -->
         <header class="header">
             <div class="container">
-                <h1><i class="fas fa-star"></i> 从夯到拉</h1>
+                <h1><i class="fas fa-star"></i> 从夯到拉 - 层级排行榜</h1>
                 <div class="user-info" id="userInfo" style="display: none;">
                     <span id="username"></span>
                     <button onclick="logout()">退出</button>
                 </div>
             </div>
         </header>
-        
-        <!-- 统计面板 -->
-        <div class="stats-panel" id="statsPanel">
-            <div class="container">
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <i class="fas fa-users"></i>
-                        <div class="stat-number" id="totalUsers">0</div>
-                        <div class="stat-label">用户数</div>
+
+        <!-- 层级排行榜容器 -->
+        <div class="tier-list-container">
+            <!-- S级 - 夯 -->
+            <div class="tier-row tier-s">
+                <div class="tier-label">夯</div>
+                <div class="tier-content" data-tier="s">
+                    <div class="tier-item" draggable="true" data-id="cyberpunk">
+                        <span>赛博朋克2077</span>
                     </div>
-                    <div class="stat-item">
-                        <i class="fas fa-file-alt"></i>
-                        <div class="stat-number" id="totalContents">0</div>
-                        <div class="stat-label">内容数</div>
+                    <div class="tier-item" draggable="true" data-id="fallout">
+                        <span>辐射76</span>
                     </div>
-                    <div class="stat-item">
-                        <i class="fas fa-star"></i>
-                        <div class="stat-number" id="totalRatings">0</div>
-                        <div class="stat-label">评价数</div>
+                </div>
+            </div>
+
+            <!-- A级 - 顶级 -->
+            <div class="tier-row tier-a">
+                <div class="tier-label">顶级</div>
+                <div class="tier-content" data-tier="a">
+                    <div class="tier-item" draggable="true" data-id="witcher3">
+                        <span>巫师3</span>
+                    </div>
+                    <div class="tier-item" draggable="true" data-id="rdr2">
+                        <span>荒野大镖客2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B级 - 人上人 -->
+            <div class="tier-row tier-b">
+                <div class="tier-label">人上人</div>
+                <div class="tier-content" data-tier="b">
+                    <div class="tier-item" draggable="true" data-id="eldenring">
+                        <span>艾尔登法环</span>
+                    </div>
+                    <div class="tier-item" draggable="true" data-id="gow">
+                        <span>战神</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- C级 - NPC -->
+            <div class="tier-row tier-c">
+                <div class="tier-label">NPC</div>
+                <div class="tier-content" data-tier="c">
+                    <div class="tier-item" draggable="true" data-id="cod">
+                        <span>使命召唤</span>
+                    </div>
+                    <div class="tier-item" draggable="true" data-id="fifa">
+                        <span>FIFA</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- D级 - 拉完了 -->
+            <div class="tier-row tier-d">
+                <div class="tier-label">拉完了</div>
+                <div class="tier-content" data-tier="d">
+                    <div class="tier-item" draggable="true" data-id="anthem">
+                        <span>圣歌</span>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- 分类标签 -->
-        <div class="category-tabs">
-            <div class="container">
-                <button class="category-tab active" data-category="all">全部</button>
-                <button class="category-tab" data-category="game">游戏</button>
-                <button class="category-tab" data-category="movie">影视</button>
-                <button class="category-tab" data-category="music">音乐</button>
-                <button class="category-tab" data-category="book">文学</button>
-                <button class="category-tab" data-category="food">美食</button>
-                <button class="category-tab" data-category="tech">科技</button>
+
+        <!-- 待评价项目区域 -->
+        <div id="unranked-container">
+            <h2>待评价项目</h2>
+            <div id="unranked-items">
+                <div class="tier-item" draggable="true" data-id="starfield">
+                    <span>星空</span>
+                </div>
+                <div class="tier-item" draggable="true" data-id="hogwarts">
+                    <span>霍格沃茨遗产</span>
+                </div>
+                <div class="tier-item" draggable="true" data-id="scarlet">
+                    <span>宝可梦朱紫</span>
+                </div>
+                <div class="tier-item" draggable="true" data-id="arknights">
+                    <span>明日方舟</span>
+                </div>
+                <div class="tier-item" draggable="true" data-id="genshin">
+                    <span>原神</span>
+                </div>
             </div>
         </div>
-        
-        <!-- 主要内容区域 -->
-        <main class="main-content">
-            <div class="container">
-                <!-- 内容列表 -->
-                <div class="content-list" id="contentList">
-                    <!-- 内容卡片将通过JavaScript动态生成 -->
-                </div>
-                
-                <!-- 评价模态框 -->
-                <div id="ratingModal" class="modal">
-                    <div class="modal-content large">
-                        <div class="modal-header">
-                            <h2 id="modalTitle">评价内容</h2>
-                            <button class="close-btn" onclick="closeRatingModal()">&times;</button>
-                        </div>
-                        
-                        <form id="ratingForm">
-                            <div class="rating-categories">
-                                <div class="rating-category">
-                                    <label>总体评价 *</label>
-                                    <div class="rating-levels" id="overallLevels">
-                                        <!-- 动态生成等级按钮 -->
-                                    </div>
-                                </div>
-                                
-                                <div class="rating-category">
-                                    <label>技术层面</label>
-                                    <div class="rating-levels" id="technicalLevels">
-                                        <!-- 动态生成等级按钮 -->
-                                    </div>
-                                </div>
-                                
-                                <div class="rating-category">
-                                    <label>创意层面</label>
-                                    <div class="rating-levels" id="creativityLevels">
-                                        <!-- 动态生成等级按钮 -->
-                                    </div>
-                                </div>
-                                
-                                <div class="rating-category">
-                                    <label>执行层面</label>
-                                    <div class="rating-levels" id="executionLevels">
-                                        <!-- 动态生成等级按钮 -->
-                                    </div>
-                                </div>
-                                
-                                <div class="rating-category">
-                                    <label>影响力</label>
-                                    <div class="rating-levels" id="impactLevels">
-                                        <!-- 动态生成等级按钮 -->
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>详细评价</label>
-                                <textarea id="ratingComment" placeholder="分享你的详细想法..."></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>标签</label>
-                                <div class="tags-input">
-                                    <input type="text" id="tagInput" placeholder="输入标签后按回车添加">
-                                    <div id="tagsContainer" class="tags-container">
-                                        <!-- 动态生成的标签 -->
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="submit-btn">提交评价</button>
-                        </form>
-                        
-                        <div id="existingRatings" class="existing-ratings">
-                            <!-- 现有评价 -->
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 创建内容模态框 -->
-                <div id="createModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>添加新内容</h2>
-                            <button class="close-btn" onclick="closeCreateModal()">&times;</button>
-                        </div>
-                        
-                        <form id="createContentForm">
-                            <div class="form-group">
-                                <label>标题 *</label>
-                                <input type="text" id="contentTitle" placeholder="内容标题" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>分类 *</label>
-                                <select id="contentCategory" required>
-                                    <option value="">选择分类</option>
-                                    <option value="game">游戏</option>
-                                    <option value="movie">影视</option>
-                                    <option value="music">音乐</option>
-                                    <option value="book">文学</option>
-                                    <option value="food">美食</option>
-                                    <option value="tech">科技</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>描述</label>
-                                <textarea id="contentDescription" placeholder="内容描述..."></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>图片URL</label>
-                                <input type="url" id="contentImage" placeholder="图片链接（可选）">
-                            </div>
-                            
-                            <button type="submit" class="submit-btn">创建内容</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </main>
-        
+
         <!-- 浮动操作按钮 -->
         <div class="fab-container">
-            <button class="fab" onclick="openCreateModal()" title="添加内容">
+            <button class="fab" onclick="addNewItem()" title="添加新项目">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
